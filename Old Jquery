@@ -1,0 +1,303 @@
+<div>
+<!--
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/smoothness/jquery-ui.css" />
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+-->
+<?!= include('jquery'); ?>
+<?!= include('ui'); ?>
+<?!= include('uiCss'); ?>
+
+<!--<audio id="badSound">
+<source src="//dl.dropboxusercontent.com/u/24397004/Permanent%20To%20Share/Bad.mp3" type="audio/ogg">
+Your browser does not support the audio element.
+</audio>
+
+<audio id="goodSound">
+<source src="//dl.dropboxusercontent.com/u/24397004/Permanent%20To%20Share/Good.mp3" type="audio/ogg">
+Your browser does not support the audio element.
+</audio>-->
+
+<div class="ui-widget">
+<div id="all">
+<label for="eventnum">Event Number: </label>
+<input id="eventnum" class="glowing-border"/><br><br>
+<label for="tags">Name: </label>
+<input id="tags" class="glowing-border"/>
+<br><br><br><i><div id="lastMember"><div id="package"></div></div><div id="secretcodeDiv" style="display: none;"><input id="secretcodeInput" style="display:none;">EMAIL HERE:<input id="email" plaeholder="PUT EMAIL HERE"><div id="lastCode"></div></div></i><br><br>
+
+<? var data = SpreadsheetApp
+.openById('1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc')
+.getRange("D2:AZ2")
+.getValues(); ?>
+<table>
+<? for (var i = 1; i < data[0].length; i++) { ?>
+<? if(data[0][i]!="") {?>
+<tr>
+<td><?= i+": "+data[0][i] ?></td>
+</tr>
+<? } ?>
+<? } ?>
+</table>
+<!--<a href="https://docs.google.com/forms/d/1eIpy0BEkxAG3DR2FBkyDPK0ClpvCGY2kPVTJiuklJIk/viewform">Separate Form to add Email address if new user</a>-->
+<br><br>Using <a href="https://docs.google.com/document/d/11AnbJa9xRoZ7f20tXuCePWEavo0fv25qDeyqQ9hoG_8/edit">this template</a>
+<br><br><button id="sendEmail">Send Email to Every Member</button>     <button id="sendEmailTest">Test Email</button><br>
+<button id="doLetter">Make Attendance Leter for every Member</button> <button id="doLetterTest">Make Test Letter</button> <a href="https://docs.google.com/document/d/1u1UBP-6ILZgfAoJKHS6tNRH-5HXKSqOsw5A_B7kS54o/edit">here</a><br>
+<br><br><button id="checkRecentMembersWoEmail">Check for Recent Member W/O Email or W/O dues</button>
+<br><div id="recentWOEmail"></div>
+</div>
+</div>
+<style>
+.ui-widget{
+float:left;
+position:relative;
+left:50%;
+}
+
+#all{
+float:left;
+position:relative;
+left:-50%;
+}
+#eventnum{
+width:30px;
+text-align:center;
+}
+.glowing-border {
+margin-left:auto;
+margin-right:auto;
+width: 200px;
+border: 2px solid #dadada;
+border-radius: 7px;
+font-size: 20px;
+padding: 5px;
+}
+
+.glowing-border:focus { 
+outline: none;
+border-color: #9ecaed;
+box-shadow: 0 0 10px #9ecaed;
+}
+</style>
+<script>
+// This code in this function runs when the page is loaded.
+//alert("Starting")
+$(function() {
+console.log("ready!");
+console.log($("#tags").val())
+google.script.run.withSuccessHandler(buildTagList).getAvailableTags();
+$("#tags").keypress(function(e) {
+//        console.log("Keys pressed in tags")
+if (e.which == 13) {
+//enter
+sumbitall()
+return false;
+}
+});
+$("#email").keypress(function(e) {
+console.log("Keys pressed in email")
+if (e.which == 13) {
+//enter
+sumbitEmail()
+return false;
+}
+});
+
+$("#checkRecentMembersWoEmail").click(function(){
+console.log("clicked")
+checkRecentMembersWoEmail()
+})
+});
+
+function buildTagList(availableTags) {
+console.log(availableTags)
+$("#tags").autocomplete({
+source: availableTags,
+select: function(event, ui) {
+$("#tags").val(ui.item.value)
+sumbitall()
+//            google.script.run.console(ui.item.value)
+}
+});
+}
+
+function sumbitall() {
+console.log(parseFloat($("#eventnum").val()))
+var eventnum = parseFloat($("#eventnum").val())
+if (isNaN(eventnum)) {
+alert(
+"Please Fill Out Event Number(check spreadsheet or List at Bottom(reupdates on refresh))"
+)
+} else {
+google.script.run.withSuccessHandler(getAlert).console($("#tags").val().toLowerCase(), eventnum)
+$("#tags").css("background-color", "#D3D3D3").attr("er", "WAIT;NOT FINISHED");
+setTimeout(function() {
+$("#lastMember").html($("#tags").val())
+$("#tags").val("")
+$("#secretcodeDiv").hide()
+}, 500)
+}
+}
+
+function getAlert(returned) {
+$("#tags").css("backgroundColor", "white").attr("placeholder", "");
+console.log("returned: "+returned)
+returned = returned.split(" DUES: ")
+console.log(returned)
+if(returned.length>1){
+returned[1] = returned[1].split(",")
+console.log(returned[1])
+console.log("Has dues/package information")
+var duesInfo = ""
+if(returned[1][0] == "Y"){
+duesInfo+="Paid Dues; "
+//document.getElementById("goodSound").play()
+}else{
+duesInfo+="Has NOT Paid Dues; "
+//document.getElementById("badSound").play()
+}
+if(returned[1][1] == "Y"){
+duesInfo+="Paid Package"
+}else{
+duesInfo+="Has NOT Paid Package"
+}
+console.log(duesInfo)
+$("#lastMember").append("<br>"+duesInfo)
+
+}
+returned = returned[0]
+if (returned != "Nothing") {
+//document.getElementById("badSound").play()
+//        alert(returned)
+$("#lastCode").html("and their secret code(a new user) was " +
+returned)
+$("#secretcodeInput").val(returned)
+$("#secretcodeDiv").show()
+//        setTimeout(function(){$("#email").click();console.log("set focuss")}, 1000)
+} else {
+$("#lastCode").html("")
+}
+}
+
+
+function getAlertEmail(returned) {
+console.log(returned)
+if (returned != "Nothing") {
+//       console.log(returned)
+}
+}
+
+function sumbitEmail() {
+//    console.log(parseFloat($("#eventnum").val()))
+var secretCode = $("#secretcodeInput").val()
+var email = $("#email").val()
+console.log(email)
+var re =
+/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+console.log(re.test(email))
+if (!/^[A-z][0-9][A-z]$/.test(secretCode) || !re.test(email)) {
+alert(
+"Double Check that the code is right and the email is a valid email"
+)
+} else {
+google.script.run.withSuccessHandler(getAlertEmail).doEmail(email,
+secretCode)
+setTimeout(function() {
+$("#secretcodeDiv").hide()
+$("#secretcodeInput").val("")
+$("#email").val("")
+//setTimeout(function(){
+//document.getElementById("tags").focus()
+//document.getElementById("tags").click()
+////        $("#tags").focus()
+////        $("#tags").click()
+//}, 100)
+$("#lastMember").html($("#tags").val())
+$("#tags").val("")
+}, 500)
+}
+}
+
+function checkRecentMembersWoEmail(){
+google.script.run.withSuccessHandler(buildRecentMembers).checkForRecentMembersWOEmails();
+}
+
+function buildRecentMembers(returned){
+console.log(returned)
+$("#recentWOEmail").html(returned)
+}
+
+//sendEmail">Send Email to Every Member</button>
+//<button id="doLetter
+$("#sendEmail").click(function(){
+var r = confirm("Are you SURE you want to send an email to every JCL Member?");
+if (r == true) {
+google.script.run.withSuccessHandler(function(){
+alert("Email Sent to Everyone!")
+}).emailReminders(true);
+}
+})
+
+$("#sendEmailTest").click(function(){
+var person = prompt("Please enter your email to send the test to", "");
+if (person != null) {
+google.script.run.withSuccessHandler(function(){
+alert("Email Sent to Everyone!")
+}).templateToOut([{"name":"Marcus Aurelius","numPoints":5,"arrAttended":["T-Shirt: for 1 point","Gladiator: for 1 point","Dulanium: for 3 points"],"email":person}],true);
+}
+})
+
+$("#doLetterTest").click(function(){
+google.script.run.withSuccessHandler(function(){
+alert("Done\nRefresh Attendance Google Doc")
+}).templateToOut([{"name":"Julius Caesar","numPoints":5,"arrAttended":["T-Shirt: for 1 point","Gladiator: for 1 point","Dulanium: for 3 points"],"email":person}],false);
+})
+
+$("#doLetter").click(function(){
+google.script.run.withSuccessHandler(function(){
+alert("Done\nRefresh Attendance Google Doc")
+}).emailReminders(false)
+})
+
+//    
+//google.script.run.withSuccessHandler(buildTagList).getAvailableTags();
+//
+//// var allresponses = e.response.getItemResponses()
+//  var secretcode =$("#secretcodeInput").val()
+//  var email = $("#email").val()
+//  if(!/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/.test(email)){
+//  alert("Not a valid email")
+//  return
+//  }
+//  Logger.log("S:"+secretcode+" @:"+email)
+//  var ss = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1")
+//  var alpha=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+//  var data = ss.getDataRange().getValues();
+//  for(var i=2; i<=data.length-1; i++){
+//    Logger.log(data[i][1])
+//    if(data[i][1].toString().toLowerCase()==secretcode.toString().toLowerCase()){
+//      ss.getRange("C"+(i+1)).setValue(email)
+//      //      TD
+//            sendEmail(email, email, "dulaneylatin@gmail.com", "Dulaney JCL", "Successful JCL Registration", "Thanks "+data[i][0]+" (that is your correct name, right?),<br>Email <a href = 'mailto:Dulaneylatin@gmail.com'>Dulaneylatin@gmail.com</a> or go to your favorite latin teacher for upcoming meetings and questions.<br>Enjoy,<br>JCL", "html")
+////      MailApp.sendEmail({
+////        to: email,
+////        subject: "Successful JCL Registration",
+////        htmlBody: "Thanks, email <a href = 'mailto:Dulaneylatin@gmail.com'>Dulaneylatin@gmail.com</a> for points and if dues were paid"
+////        
+////      })
+//      break;
+//    }
+//    if(i==data.length-1){
+//      sendEmail(email, email, "dulaneylatin@gmail.com", "Dulaney JCL", "Sorry, Not a Valid Secret Code", "Please Go Back to the Latin Club Registration or email Jonah Langlieb at <a href = 'mailto:jonahmail1@gmail.com'>jonahmail1@gmail.com</a> (ONLY IF MEETING IS DONE) with your name and email<br>Thanks,<br>Dulaney Latin Club(JCL)", "html")
+////      MailApp.sendEmail({
+////        to: email,
+////        subject: "Sorry, Not a Valid Secret Code",
+////        htmlBody: "Please Go Back to the Latin Club Registration or email Jonah Langlieb at <a href = 'mailto:jonahmail1@gmail.com'>jonahmail1@gmail.com</a> (ONLY IF MEETING IS DONE) with your name and email<br>Thanks,<br>Dulaney Latin Club(JCL)"
+////      });
+//    }
+//  }
+
+
+</script>
+</div>

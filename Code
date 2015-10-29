@@ -1,0 +1,349 @@
+//dulaneylatin, dulaneylatin123
+//Form is at https://script.google.com/macros/s/AKfycbwh5b35rWwKZ5p2OjBBd-7RA0XphOxvIruU-DRS9Bp0E8NVnf8/exec
+//Spreadsheet is at https://docs.google.com/spreadsheets/d/1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc/edit#gid=0
+//Secret Code is at https://docs.google.com/forms/d/1eIpy0BEkxAG3DR2FBkyDPK0ClpvCGY2kPVTJiuklJIk/viewform
+//Secret Code JS is at https://script.google.com/macros/d/MXgTHDouNcZY6W4F8-NhULJfPwTTAwr0g/edit?uiv=2&mid=ACjPJvGt9eAm1t0cNw9Zr_mS5h5W-45PX7i9wJZGYMdYFR11EdjHebKAgAYWkh590jD_w2cQaEe1IFai-zl6_lMJDXmSuDRHPGqYBZAUxD3o9__CkJB0-inpLfegQ-w_i9pm_abDoJJFxnQ
+
+
+//form bit.ly/latinemail
+//make sure to update at file -> manage versions to update
+
+//Go to https://docs.google.com/spreadsheets/d/1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc/edit#gid=0 for spreadsheet, https://script.google.com/macros/s/AKfycbwh5b35rWwKZ5p2OjBBd-7RA0XphOxvIruU-DRS9Bp0E8NVnf8/exec for the 1st form and https://docs.google.com/forms/d/1eIpy0BEkxAG3DR2FBkyDPK0ClpvCGY2kPVTJiuklJIk/viewform?fbzx=4810205905713716253 for the second form
+//Also for email secret code form code is at https://script.google.com/macros/d/MXgTHDouNcZY6W4F8-NhULJfPwTTAwr0g/edit?uiv=2&mid=ACjPJvH7kBBzyCZBly06Wst6M7dYUPqd7H0uhzXNr90LySRNhtB_f6_ji8o5M2x6J218kfmpk2J_-Qaw63k2xE4w0PBhyWM4eLTkSZpP_ernju3LbDDHWI0jhG5WiaJWZG_-brw55FnZ6No
+function doGet() {
+  return template = HtmlService.createTemplateFromFile('Old Jquery').evaluate().setTitle("JCL Attendance")//.setSandboxMode(HtmlService.SandboxMode.IFRAME)
+}
+
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename)
+  .getContent();
+}
+
+
+function checkForRecentMembersWOEmails(){
+  //check for members attending the most recent meeting wo an email
+  var val = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1").getRange("A3:AB120").getValues()
+  var numRows = 0
+  //find max/last row
+  for(var i in val){
+    for(var q=val[i].length-1; q>=0; q--){
+      if(val[i][q] != ""){
+        if((q+1)>numRows){
+          numRows = q+1
+        }
+        break;
+      }
+    }
+  }
+  Logger.log(numRows)
+  
+  var peopleWNoEmail=""
+  for(var i in val){
+    if(val[i][numRows-1] == "Y" &&val[i][2]==""){
+    //Gone to this meeting and no email
+      peopleWNoEmail+=val[i][0]+"-No Email<br>"
+    }
+    if(val[i][numRows-1] == "Y" && val[i][4]=="" && val[i][5]==""){
+      //Gone to this meeting and no email
+      peopleWNoEmail+=val[i][0]+"-NO DUES OR PACKAGE<br>"
+    }
+    
+  }
+  Logger.log(peopleWNoEmail)
+  return peopleWNoEmail
+}
+
+function emailReminders(email){
+  //MAKE FALSE FOR PAPER VERSION
+//  var email = false;
+  
+  var vals = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1").getDataRange().getValues()
+   var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  allAttendance = []
+  Logger.log(vals.length-1)
+  for(var i=2; i<vals.length;i++){
+//    for(var i=2; i<4;i++){
+    Logger.log(i)
+    //TDDD PUT TOTAL POINTS IN JC
+    if(email == true){
+      if(vals[i][0]=="" || vals[i][2] == ""||re.test(vals[i][2]) == false){continue;}
+    }else{
+      if(vals[i][0]==""){continue;}
+    }
+//    Logger.log(i)
+//    var html=vals[i][0]+",<br><br>&emsp;&emsp;The JCL year is coming to a close. Our final record shows you have NUMPOINTS points for this year (you need 12 points to be a member of good standing). <br><br><ul>"
+    var numPoints = 0
+//    if(vals[i][4] !="Y" && vals[i][5]!="Y"){
+//      
+//      html+="<li>We do <b>not</b> have record that you paid your dues or purchased a package. Please come to Mrs. Mitchell's room Monday before school so we can fix that ($20 for dues)</li><br>"
+//    }else if(vals[i][4] =="Y"){
+//      html +="<li>Paid for dues</li><br>"
+//    }else if(vals[i][5] =="Y"){
+//      html +="<li>Purchased a Package</li><br>"
+//    }
+    
+      var arrEventsAttended = []    
+    for(var q =6; q<vals[i].length; q++){
+      if(vals[i][q] == "Y"){
+        if(parseInt(vals[0][q]) > 1){
+//          html += "<li><b>"+vals[1][q]+"</u></b>: for "+vals[0][q]+" points</li><br>"
+          arrEventsAttended.push(vals[1][q]+": for "+vals[0][q]+" points")
+        }else{
+//          html += "<li><b>"+vals[1][q]+"</u></b>: for "+vals[0][q]+" point</li><br>"
+          arrEventsAttended.push(vals[1][q]+": for "+vals[0][q]+" point")
+        }
+        if(parseFloat(vals[0][q]) == null){
+           vals[0][q] = 0
+           console.log("ERROR IN ROW "+q)
+           MailApp.sendEmail("jonahmail1@gmail.com", "Bad Number of Points for row "+q, "For row "+q+"0 start at https://docs.google.com/spreadsheets/d/1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc/edit#gid=0")
+           }
+        numPoints+=parseFloat(vals[0][q])
+      }
+      //TD DEELETE 90 TO MAKE FOR ALL
+      //i== 1 less then row
+      if(q == vals[i].length-1/* && i == 92*/){
+        
+//        html = html.replace("NUMPOINTS", numPoints)
+//        if(numPoints>=12){
+//        html+="</ul><br>&emsp;CONGRATULATIONS, you met the points requirement for JCL membership with "+numPoints+" points."
+//        }else{
+//        html+="</ul><br>&emsp;As of right now, you do not meet the points requirement for JCL membership. If you went to any meetings that aren't listed above, please see Ms. Mitchell ASAP and drop off a peice of paper with the needed fix in the box at the back of her room."
+//        }
+//              html+="<br><br>&emsp;&emsp;&emsp;&emsp;&emsp;Thanks,<br>&emsp;&emsp;&emsp;&emsp;&emsp;Dulaney JCL"
+//        if(email == true){
+////          sendEmail(vals[i][2], vals[i][0], "dulaneylatin@gmail.com", "Dulaney JCL", "Points So Far", html, "html")
+//          allAttendance.push({name:vals[i][0], numPoints: numPoints, arrAttended: arrEventsAttended})
+//        }else{
+//          //DOING PAPER VERSION
+//      }
+        allAttendance.push({name:vals[i][0], numPoints: numPoints, arrAttended: arrEventsAttended,email:vals[i][2]})
+        //IF SENING EMAIL
+        
+//        html+="</ul><br>We will be making the final roster for NHS membersIn summary, you have "+numPoints+" out of the 12 needed to be a member of good standing<br><br>Thanks,<br>Dulaney Junior Classical League<br><br>P.S.<br>Don't forget to wear your latin T-Shirt to a JCL meeting so you get a point(1 per year)"
+
+        
+//        Logger.log(numPoints)
+//        Logger.log(html)
+//        //sendEmail(to, toname, from, fromname, subj, message, htmlortext)
+//        Logger.log(html)
+//        Logger.log("-----------------------")
+
+      }
+    }
+    if(i == vals.length-1){
+      Logger.log("DONE")
+    //COMMENT OUT IF DON'T WANT TO GET PAPERS FOR PASSING OUT
+      //has all people, pass array of ppl-> template maker, if want
+     //DONT FORGET TO COMMENT OUT SENDEMAIL ABOVE
+      templateToOut(allAttendance,email)
+//      template = SpreadsheetApp.openById("11AnbJa9xRoZ7f20tXuCePWEavo0fv25qDeyqQ9hoG_8").get
+    }
+  }
+}
+
+
+function templateToOut(returnedStudents,isEmail){
+  var template = DocumentApp.openById("11AnbJa9xRoZ7f20tXuCePWEavo0fv25qDeyqQ9hoG_8").getBody().getText() 
+  allText  = ""
+  Logger.log(JSON.stringify(returnedStudents[0]))
+  for(var i in returnedStudents){
+    templateForStudent = template.replace("NAME HERE", returnedStudents[i]["name"]).replace("POINTS HERE", returnedStudents[i]["numPoints"]).replace("EVENTS HERE", returnedStudents[i]["arrAttended"].join("\n\t\t"))
+    if(isEmail){
+      //send out an email individually
+      Logger.log(templateForStudent.replace(/\n/g, "<br>"))
+      sendEmail(returnedStudents[i]["email"], returnedStudents[i]["name"], "dulaneylatin@gmail.com", "Dulaney JCL", "Points So Far", templateForStudent.replace(/\n/g, "<br>").replace(/^\s*/gm, ""), "html")
+    }else{
+      allText+="\f"+templateForStudent
+      DocumentApp.openById("1u1UBP-6ILZgfAoJKHS6tNRH-5HXKSqOsw5A_B7kS54o").getBody().clear().setText(allText)
+    }
+  }
+  
+  //  Logger.log(JSON.stringify(arrAttend))
+  //attendance, takes arr from emailReminders and takes in template from https://docs.google.com/document/d/11AnbJa9xRoZ7f20tXuCePWEavo0fv25qDeyqQ9hoG_8/edit to https://docs.google.com/document/d/1u1UBP-6ILZgfAoJKHS6tNRH-5HXKSqOsw5A_B7kS54o/edit
+  
+  //  returnedStudents = [{"name":"Adam Zimmerman","numPoints":4,"arrAttended":["Gladiator: for 1 point","Dulanium Prep #2: for 1 point","Roman Foods: for 1 point","Saturnalia: for 1 point"]},{"name":"Paul Banegura","numPoints":1,"arrAttended":["Gladiator: for 1 point"]},{"name":"Mackenzie Crotty","numPoints":4,"arrAttended":["Gladiator: for 1 point","Dulanium Prep #4: for 1 point","Dulanium Prep #6: for 1 point","Roman Foods: for 1 point"]},{"name":"James Bonner","numPoints":1,"arrAttended":["Gladiator: for 1 point"]}]
+  Logger.log(returnedStudents.length)
+  
+  
+}
+//NORMAL, SECRET CODE ONLY FOR NEW MEMBERS
+//NORMAL, SECRET CODE ONLY FOR NEW MEMBERS
+//NORMAL, SECRET CODE ONLY FOR NEW MEMBERS
+//NORMAL, SECRET CODE ONLY FOR NEW MEMBERS
+//NORMAL, SECRET CODE ONLY FOR NEW MEMBERS
+//NORMAL, SECRET CODE ONLY FOR NEW MEMBERS
+
+function console(msg, eventnum){
+  Logger.log("....")
+  var backupss = SpreadsheetApp.openById("1IpHtO2j0iNQm35q79woVOe1Melu066Q_ESUq-Jctn5Q").getSheetByName("Sheet1")
+  backupss.appendRow([eventnum, msg])
+  var ss = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1")
+  var alpha=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z", "AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ"]
+  //JS Fiddle -> doc
+  var secrets = ["P8Y","K7L","Q4M","U8W","O5U","C5J","X7R","B2J","E6S","D1W","D4U","W3Y","P8M","H3O","G2N","N9G","F4U","U4J","O3J","B6C","L5T","L1Y","T1F","X1E","B8H","M5R","A2X","U4Y","I4L","O6E","B7H","Z5I","U4S","L6O","I8I","L2W","I6E","A1C","Z9E","H1R","D6Q","S5H","S7O","C2L","N9E","T2K","G7O","Y2K","X5T","D7X","N9T","Q8Q","B5A","G2I","O5P","W6E","J2A","J4X","T3K","R5U","B3M","K6Q","X7J","Y6Y","M2N","I9D","L9P","W2C","B7D","W8I","O9V","E3P","H4B","T3E","S2S","H2A","K1J","O1M","H2T","Q6S","W5W","O6S","K7K","M3P","H7L","V2F","Q6T","H3S","H9A","Y5Q","Z5R","U2I","D6M","N8I","J8V","O5B","L2B","M6K","M6F","D6K","D8Q","U2D","R8T","O8R","S3U","C6Y","T1B","S5M","T9M","D4K","N3D","T5G","V5V","S7C","X5B","B4Y","B3Z","M8F","L2T","P4S","Q3S","W6A","G6U","K2P","E3C","Q5L","D2I","K6T","Q8M","Q4D","G2E","H9W","J1L","I8A","H8U","D2F","L6W","V6A","R6P","E8C","Z3S","I6G","H4N","D6H","S1E","L7K","X3H","M7I","R4M","Y1I","J1K","X8R","C7F","K3V","N5E","H4E","J7F","R6V","O4U","L5G","D4V","N8B","Y9R","O3N","L5C","W4J","K5T","L1F","L4E","U8Z","I2H","Y2P","L5B","Q4H","G6K","E7N","L8D","C5O","X5E","I4Y","O7E","L6D","M3O","X3R","L2U","B2K","R8Z","U7F","F6S","D4N","Q3O","K8H","N6W","A8L","E3S","P8G","Y8U","L4F","Y1G","J6O","Z2Y","S3V","V5X","B2I","O5Z","H7D","K5Q","B6N","C6N","K5B","R8V","Z6Q","E9G","V6S","N5X","T1Q","I6B","E8T","I2I","M1W","H8A","L2F","R8M","O4U","P2W","M2U","I5P","O8T","X2J","M1I","N3O","T8Q","L5K","S1M","Z7Y","B1R","S5S","R1X","E6E","D8N","H7O","H6W","O5B","E8M","C8F","D6S","S5K","K7E","L7H","T6B","L4T","X6O","L3B","V1E","R4E","B8D","S5V","L7Q","U6W","O7V","J3I","W8Q","K3J","V8B","Q4G","I8F","C6E","W8F","M9X","P5A","P6I","U7P","D4W","L9Q","E5L","Y8B","Z5J","J8I","K8T","J3L","X8Y","I6N","I2F","D7P","C7J","X5Y","U4V","X8I","K7D","M2U","M5U","M3J","G6N","X5R","I2K","M7G","Q4Z","M3B","A2B","Y6X"]
+  var data = ss.getDataRange().getValues();
+  
+  
+  //If want to make all secret code regardless if already is a name *
+  for(var i=2; i<=data.length-1; i++){
+    if(data[i][0].toLowerCase()==msg){
+      Logger.log("Exists in Sheet")
+      //*check if name is already in the form
+      ss.getRange(alpha[parseFloat(eventnum)+3]+(i+1)).setValue("Y")
+      //      Logger.log(ss.getRange("B"+(i+1)).getValue() == "")
+      duesPackage = ss.getRange("D"+(i+1)+":E"+(i+1)).getValues()
+      
+        Logger.log("Dues "+duesPackage)
+        var secretCodeRange = ss.getRange("B"+(i+1)+":C"+(i+1))
+        var secretCodeAndEmail = secretCodeRange.getValues()[0]
+        Logger.log(secretCodeAndEmail)
+      if(secretCodeAndEmail[1] == ""){
+        Logger.log("No SecretCode")
+        
+        var scriptprop = PropertiesService.getScriptProperties()
+        var secretcode = parseInt(scriptprop.getProperty("secret"))
+        //if is last one, start over(assume doesn't need to repeat)
+        scriptprop.setProperty('secret', secretcode != secrets.length-1 ? secretcode+1:0);
+        secretcode = secrets[secretcode]
+        
+        secretCodeRange.setValues([[secretcode, ""]])
+        return secretcode+" DUES: "+duesPackage
+        
+        
+      }else{
+        Logger.log("Has SecretCode")
+        return "Nothing"+" DUES: "+duesPackage
+        break;
+      }
+    }
+//    if(i==data.length-1){
+//    }
+  }
+  //if empty spreadsheet b/c new year or not there
+        Logger.log("Not in Sheet")
+      //isn't in the form so need to give secret code
+      var scriptprop = PropertiesService.getScriptProperties()
+      var secretcode = parseInt(scriptprop.getProperty("secret"))
+      //if is last one, start over(assume doesn't need to repeat)
+      scriptprop.setProperty('secret', secretcode != secrets.length-1 ? secretcode+1:0);
+      secretcode = secrets[secretcode]
+      
+      Logger.log(msg)
+      Logger.log(msg.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}))
+      msg = msg.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();})
+      Logger.log(msg)
+      arr = [msg,secretcode,"", '=ARRAYFORMULA(sum(IF(indirect(concat(ADDRESS(row(),7), concat(":", ADDRESS(row(), 37))))="Y", G$1:AK$1, 0)))']
+      for(var z=0; z<=eventnum-2; z++){
+        arr.push("")
+      }
+      arr.push("Y")
+      ss.appendRow(arr)
+      return secretcode
+}
+
+function getAvailableTags() {
+  
+  var ss = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1")
+  var data = ss.getRange("A3:A300").getValues()
+  rightarr = []  
+  for(var i in data){
+    rightarr.push(data[i][0])
+  }
+  Logger.log(rightarr)
+  return rightarr
+}
+
+
+
+function doEmail(email, secretcode){
+  Logger.log("S:"+secretcode+" @:"+email)
+  var ss = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1")
+  var alpha=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+  var data = ss.getDataRange().getValues();
+  for(var i=2; i<=data.length-1; i++){
+    Logger.log(data[i][1])
+    if(data[i][1].toString().toLowerCase()==secretcode.toString().toLowerCase()){
+      ss.getRange("C"+(i+1)).setValue(email)
+      //      TD
+      sendEmail(email, email, "dulaneylatin@gmail.com", "Dulaney JCL", "Successful JCL Registration", "Thanks "+data[i][0]+" (that is your correct name, right?),<br>Email <a href = 'mailto:Dulaneylatin@gmail.com'>Dulaneylatin@gmail.com</a> or go to your favorite latin teacher for upcoming meetings and questions.<br>Enjoy,<br>JCL", "html")
+      //      MailApp.sendEmail({
+      //        to: email,
+      //        subject: "Successful JCL Registration",
+      //        htmlBody: "Thanks, email <a href = 'mailto:Dulaneylatin@gmail.com'>Dulaneylatin@gmail.com</a> for points and if dues were paid"
+      //        
+      //      })
+      break;
+    }
+    if(i==data.length-1){
+      sendEmail(email, email, "dulaneylatin@gmail.com", "Dulaney JCL", "Sorry, Not a Valid Secret Code", "Please Go Back to the Latin Club Registration or email Jonah Langlieb at <a href = 'mailto:jonahmail1@gmail.com'>jonahmail1@gmail.com</a> (ONLY IF MEETING IS DONE) with your name and email<br>Thanks,<br>Dulaney Latin Club(JCL)", "html")
+      //      MailApp.sendEmail({
+      //        to: email,
+      //        subject: "Sorry, Not a Valid Secret Code",
+      //        htmlBody: "Please Go Back to the Latin Club Registration or email Jonah Langlieb at <a href = 'mailto:jonahmail1@gmail.com'>jonahmail1@gmail.com</a> (ONLY IF MEETING IS DONE) with your name and email<br>Thanks,<br>Dulaney Latin Club(JCL)"
+      //      });
+    }
+  }
+}
+
+//sendEmail(to, toname, from, fromname, subj, message, htmlortext)
+function sendEmail(a,e,f,g,h,b,c){if("string"==typeof a)tos=[{email:a,name:e,type:"to"}];else{tos=[];for(var d in a)tos.push({email:a[d],name:a[d],type:"to"})}a={key:"C0aGPbRA9MmJ8poMQT2ciA",message:{subject:h,from_email:f,from_name:g,to:tos}};Logger.log("htmltext "+c);"html"==c?(a.message.html=b,Logger.log("html")):"text"==c&&(Logger.log("text"),a.message.text=b);b={method:"post",payload:JSON.stringify(a),contentType:"application/json"};UrlFetchApp.fetch("https://mandrillapp.com/api/1.0/messages/send.json",b)};
+
+function redoNum(){  
+  PropertiesService.getScriptProperties().setProperty("secret", 0)
+}
+
+
+
+//DONT CHECK FOR ALREADY THERE, SECRET CODE FOR EVERYONE
+//function console(msg, eventnum){
+//  Logger.log(msg)
+//  var backupss = SpreadsheetApp.openById("1IpHtO2j0iNQm35q79woVOe1Melu066Q_ESUq-Jctn5Q").getSheetByName("Sheet1")
+//  backupss.appendRow([eventnum, msg])
+//  var ss = SpreadsheetApp.openById("1bsPUfzHk6ofAS78u_sAPdobzYGmHmEMJyM2Z9QlDjfc").getSheetByName("Sheet1")
+//  var alpha=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
+//  //JS Fiddle -> doc
+//  var secrets = ["P8Y","K7L","Q4M","U8W","O5U","C5J","X7R","B2J","E6S","D1W","D4U","W3Y","P8M","H3O","G2N","N9G","F4U","U4J","O3J","B6C","L5T","L1Y","T1F","X1E","B8H","M5R","A2X","U4Y","I4L","O6E","B7H","Z5I","U4S","L6O","I8I","L2W","I6E","A1C","Z9E","H1R","D6Q","S5H","S7O","C2L","N9E","T2K","G7O","Y2K","X5T","D7X","N9T","Q8Q","B5A","G2I","O5P","W6E","J2A","J4X","T3K","R5U","B3M","K6Q","X7J","Y6Y","M2N","I9D","L9P","W2C","B7D","W8I","O9V","E3P","H4B","T3E","S2S","H2A","K1J","O1M","H2T","Q6S","W5W","O6S","K7K","M3P","H7L","V2F","Q6T","H3S","H9A","Y5Q","Z5R","U2I","D6M","N8I","J8V","O5B","L2B","M6K","M6F","D6K","D8Q","U2D","R8T","O8R","S3U","C6Y","T1B","S5M","T9M","D4K","N3D","T5G","V5V","S7C","X5B","B4Y","B3Z","M8F","L2T","P4S","Q3S","W6A","G6U","K2P","E3C","Q5L","D2I","K6T","Q8M","Q4D","G2E","H9W","J1L","I8A","H8U","D2F","L6W","V6A","R6P","E8C","Z3S","I6G","H4N","D6H","S1E","L7K","X3H","M7I","R4M","Y1I","J1K","X8R","C7F","K3V","N5E","H4E","J7F","R6V","O4U","L5G","D4V","N8B","Y9R","O3N","L5C","W4J","K5T","L1F","L4E","U8Z","I2H","Y2P","L5B","Q4H","G6K","E7N","L8D","C5O","X5E","I4Y","O7E","L6D","M3O","X3R","L2U","B2K","R8Z","U7F","F6S","D4N","Q3O","K8H","N6W","A8L","E3S","P8G","Y8U","L4F","Y1G","J6O","Z2Y","S3V","V5X","B2I","O5Z","H7D","K5Q","B6N","C6N","K5B","R8V","Z6Q","E9G","V6S","N5X","T1Q","I6B","E8T","I2I","M1W","H8A","L2F","R8M","O4U","P2W","M2U","I5P","O8T","X2J","M1I","N3O","T8Q","L5K","S1M","Z7Y","B1R","S5S","R1X","E6E","D8N","H7O","H6W","O5B","E8M","C8F","D6S","S5K","K7E","L7H","T6B","L4T","X6O","L3B","V1E","R4E","B8D","S5V","L7Q","U6W","O7V","J3I","W8Q","K3J","V8B","Q4G","I8F","C6E","W8F","M9X","P5A","P6I","U7P","D4W","L9Q","E5L","Y8B","Z5J","J8I","K8T","J3L","X8Y","I6N","I2F","D7P","C7J","X5Y","U4V","X8I","K7D","M2U","M5U","M3J","G6N","X5R","I2K","M7G","Q4Z","M3B","A2B","Y6X"]
+//  var data = ss.getDataRange().getValues();
+//  var end=false
+//  addMore=0
+//  Logger.log("data"+data)
+//  Logger.log("Data length-1 "+(data.length-1))
+//  for(var i=2; i<=data.length-1; i++){
+//    Logger.log(i)
+//    if(data[i][0].toLowerCase()==msg || i == data.length-1){
+//      
+//      if(data[i][0].toLowerCase()==msg){
+//        //*check if name is already in the form
+//        ss.getRange(alpha[parseFloat(eventnum)+3]+(i+1)).setValue("Y")
+//      }else if(i==data.length-1){
+//        Logger.log("DOESNT EXIST")
+//        Logger.log(msg.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();}))
+//        msg = msg.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();})
+//        Logger.log(msg)
+//        var arrr = [msg]
+//        for(var z=0; z<=eventnum+1; z++){
+//          arrr.push("")
+//        }
+//        arrr.push("Y")
+//        Logger.log(arrr)
+//        ss.appendRow(arrr)
+//        addMore = 1
+//      }
+//      
+//      var scriptprop = PropertiesService.getScriptProperties()
+//      var secretcode = parseInt(scriptprop.getProperty("secret"))
+//      //if is last one, start over(assume doesn't need to repeat)
+//      scriptprop.setProperty('secret', secretcode != secrets.length-1 ? secretcode+1:0);
+//      secretcode = secrets[secretcode]
+//      
+//      Logger.log(msg)
+//      
+//      ss.getRange("B"+(i+1+addMore)).setValue(secretcode)
+//      addMore = 0
+//      Logger.log(secretcode)
+//      return secretcode
+//    }
+//  }
+//}
+
+
